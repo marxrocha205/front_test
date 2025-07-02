@@ -1,0 +1,577 @@
+/* --- Variáveis Globais e Reset --- */
+:root {
+    --cor-primaria: #65a30d;
+    --cor-destaque: #709111;
+    --cor-button : #3e3e3e;
+    --cor-fundo-principal: #ffffff;
+    --cor-fundo-secundario: #f0fdf4; /* Cor de fundo da seção de promoção */
+    --cor-fundo-badge: #f7fee7;
+    --cor-texto-badge: #365314;
+    --cor-desconto: #dc2626;
+     --cor-desconto2: #911818;
+    --cor-texto-principal: #1f2937;
+    --cor-borda: #e5e7eb;
+    --fonte-principal: 'Inter', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* MUDANÇA APLICADA AQUI */
+body {
+    font-family: var(--fonte-principal);
+    background-color: #e6e6e6;
+    color: var(--cor-texto-principal);
+    display: flex;
+    flex-direction: column; /* ADICIONADO: Empilha os elementos filhos (main-container e lucky-spin) */
+    align-items: center;   /* ADICIONADO: Centraliza esses elementos na horizontal */
+}
+
+/* --- Container Principal --- */
+.main-container {
+    width: 100%;
+    background-color: var(--cor-fundo-principal);
+}
+
+/* --- Cabeçalho --- */
+.page-header {
+    margin-bottom: 8px;
+}
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    min-height: 60px;
+}
+.logo {
+    width: 60px;
+    height: 60px;
+}
+.my-purchases-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    height: 44px;
+    padding: 0 1rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 10px;
+    background-color: var(--cor-fundo-principal);
+    cursor: pointer;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    transition: box-shadow 150ms ease-in-out;
+}
+.my-purchases-btn:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+.my-purchases-btn .btn-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.my-purchases-btn p {
+    font-weight: 600;
+    font-size: 16px;
+}
+.banner-img {
+    width: 100%;
+    height: auto;
+}
+.draw-info {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-bottom: 2px solid var(--cor-borda);
+}
+.info-label, .info-value, .price-label, .price-tag {
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+.price-info { display: flex; align-items: center; gap: 0.5rem; }
+.price-tag {
+    background-color: var(--cor-button);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+/* --- Seções de Conteúdo --- */
+.section-title {
+    font-family: var(--fonte-principal);
+    font-weight: 600;
+    font-size: 1.5rem; /* 24px */
+    margin-bottom: 1.25rem; /* 20px */
+}
+.promo-section {
+    background-color: var(--cor-fundo-secundario);
+    padding: 0.5rem 1.25rem;
+    margin-bottom: 12px;
+}
+.promo-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+.promo-card {
+    position: relative;
+    border: 1px solid var(--cor-borda);
+    border-radius: 10px;
+    cursor: pointer;
+    padding: 12px;
+    
+}
+.promo-badge {
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    background-color: var(--cor-fundo-badge);
+    color: var(--cor-texto-badge);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 36px;
+}
+.card-title { font-size: 1.125rem; font-weight: 600; }
+.card-subtitle { font-size: 0.875rem; font-weight: 500; }
+.original-price { color: var(--cor-desconto); font-size: 0.75rem; }
+.original-price span { text-decoration: line-through; }
+.discount-price { font-size: 0.75rem; }
+.discount-price strong { font-size: 1rem; font-weight: 600; }
+
+/* --- Seleção de Números --- */
+.number-selection-section {
+    padding: 0 1.25rem;
+    margin-bottom: 1rem;
+}
+.number-options-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+}
+.number-option {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.5rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 10px;
+    font-size: 1.625rem; /* 26px */
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 150ms ease;
+}
+.number-option.active {
+    border-color: var(--cor-destaque);
+    border-width: 2px;
+    color: var(--cor-destaque);
+}
+.number-option.popular {
+    border-color: var(--cor-primaria);
+}
+.popular-badge {
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    background-color: var(--cor-desconto2);
+    color: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 36px;
+    font-size: 12px;
+    font-weight: 400;
+    white-space: nowrap;
+}
+.popular-badge svg { margin-right: 4px; }
+
+/* --- Contador --- */
+.quantity-section {
+    padding: 1rem 1.25rem;
+}
+.quantity-counter {
+    display: flex;
+    gap: 1.25rem;
+}
+.quantity-btn {
+    width: 70px;
+    padding: 1rem;
+    border: 1px solid var(--cor-borda);
+    background-color: var(--cor-fundo-principal);
+    border-radius: 8px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+#quantity-input {
+    width: 100%;
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    -moz-appearance: textfield; /* Firefox */
+}
+#quantity-input::-webkit-outer-spin-button,
+#quantity-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#quantity-warning {
+    text-align: center;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    color: var(--cor-desconto);
+}
+
+/* --- Seção Giro da Sorte --- */
+.lucky-spin-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 20px 24px 20px;
+    width: 100%;
+    max-width: 658px; 
+    margin: 1rem auto 0 auto;
+    /* Adicionado fundo para consistência */
+}
+
+.lucky-spin-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #111827;
+    font-size: 1.125rem; /* 18px */
+    font-weight: 600;
+}
+
+.spin-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    background-color: #f9fafb;
+    border: 1px solid var(--cor-borda);
+}
+.spin-card:hover {
+    border-color: var(--cor-primaria);
+}
+
+.spin-card-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.spin-card-line1 {
+    font-size: 0.75rem; /* 12px */
+    color: #374151; /* gray-700 */
+}
+.spin-card-line1 b {
+    font-size: 1rem; /* 16px */
+    font-weight: 600;
+    color: var(--cor-texto-principal);
+}
+
+.spin-card-line2 {
+    font-size: 0.625rem; /* 10px */
+    color: #9ca3af; /* gray-400 */
+}
+
+.spin-card-reward {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    color: var(--cor-primaria);
+}
+
+.spin-card-reward p {
+    font-size: 1.125rem; /* 18px */
+    font-weight: 600;
+}
+
+.spin-card-reward-line {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+.spin-card-reward-line span {
+    font-size: 1rem;
+    font-weight: 600;
+}
+.spin-card-reward-line svg {
+    width: 16px; 
+    height: 16px;
+}
+
+/* --- Seção Prêmios Instantâneos --- */
+.prizes-section {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    max-width: 658px;
+    margin: 0 auto 2rem auto;
+    padding: 16px 20px;
+    
+}
+
+.prizes-block {
+    width: 100%;
+    border: 1px solid var(--cor-borda);
+    border-radius: 10px;
+    font-family: var(--fonte-principal);
+    background-color: #fff;
+}
+
+.prizes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+}
+
+.prizes-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--cor-texto-principal);
+}
+
+.prizes-count {
+    font-weight: 700;
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.prizes-filters {
+    padding: 0 16px;
+    margin-top: 14px;
+}
+
+.filters-list {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+}
+
+.filter-tab {
+    flex-grow: 1;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    padding: 0 1rem;
+    max-width: 280px;
+    transition: all 150ms ease;
+    border: 1px solid transparent;
+}
+
+.filter-tab:not(.active) {
+    background-color: transparent;
+    border-color: var(--cor-borda);
+    color: #6b7280;
+}
+
+.filter-tab.active {
+    background-color: var(--cor-fundo-secundario);
+    color: var(--cor-primaria);
+    border-color: var(--cor-primaria);
+}
+
+.prize-list {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.875rem;
+}
+
+.prize-item {
+    display: flex;
+    flex-direction: column;
+    padding: 13px 16px;
+    border-top: 1px solid var(--cor-borda);
+}
+
+.prize-item-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.prize-value {
+    font-weight: 600;
+    color: var(--cor-texto-principal);
+}
+
+.prize-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    padding: 4px 16px;
+    font-weight: 500;
+    stroke: #6b7280;
+    background-color:#ebebeb88;;
+}
+
+.prize-number {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.prize-status {
+    background-color: var(--cor-primaria);
+    color: white;
+    font-size: 0.875rem;
+    border-radius: 8px;
+    padding: 2px 16px;
+    text-align: center;
+    min-width: 100px;
+}
+
+.view-more-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #4b5563;
+    background: none;
+    border: none;
+    border-top: 1px solid var(--cor-borda);
+    width: 100%;
+}
+.view-more-button svg {
+    width: 12px;
+    height: 12px;
+}
+
+.my-purchases-btn-alt {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 44px;
+    min-height: 44px;
+    padding: 1rem;
+    margin-top: 1rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 10px;
+    background-color: var(--cor-fundo-principal);
+    cursor: pointer;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    font-size: 1rem;
+    font-weight: 600;
+}
+.my-purchases-btn-alt .btn-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+
+/* --- Rodapé --- */
+.page-footer {
+    position: sticky;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1.25rem;
+    min-height: 76px;
+    border-top: 2px solid var(--cor-borda);
+    background-color: var(--cor-fundo-principal);
+}
+.footer-summary { 
+    display: flex; 
+    flex-direction: column; 
+}
+.summary-label { font-size: 0.75rem; font-weight: 600; color: #4b5563; }
+.summary-original-price { font-size: 1rem; text-decoration: line-through; color: #dc262680; }
+.summary-final-price { font-size: 1.25rem; font-weight: 700; color: #4d7c0f; }
+
+#footer-no-selection span {
+    font-weight: 600;
+    color: #4B5563;
+    font-size: 0.75rem;
+    opacity: 0.6;
+}
+
+.payment-btn {
+    height: 3rem;
+    padding: 0 1.5rem;
+    background-color: var(--cor-destaque);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+}
+.payment-btn:disabled {
+    cursor: not-allowed;
+    background-color: #a1a1aa;
+}
+
+
+/* --- Media Queries (Responsividade para Telas Maiores) --- */
+
+/* sm: 640px */
+@media (min-width: 640px) {
+    .draw-info, .price-info, .price-tag {
+        font-size: 1rem;
+    }
+}
+
+/* md: 768px */
+@media (min-width: 768px) {
+    .main-container {
+        max-width: 658px;
+        margin: 2.5rem 0 0 0; 
+        border-radius: 10px;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+    .page-footer {
+        position: static; 
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+    }
+    
+    .lucky-spin-section {
+        margin-top: 1.5rem; /* Adiciona espaço consistente */
+        margin-bottom: 0; /* Remove margem de baixo para o próximo elemento controlar */
+        border-radius: 10px; /* Arredonda as bordas */
+        
+    }
+
+    /* MUDANÇA APLICADA AQUI */
+    .prizes-section {
+        margin-top: 1.5rem; /* Espaço consistente */
+        margin-bottom: 2rem;
+        border-radius: 10px; /* Arredonda as bordas */
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* Adiciona sombra */
+        padding: 0; /* Remove padding para os blocos internos controlarem */
+    }
+}
