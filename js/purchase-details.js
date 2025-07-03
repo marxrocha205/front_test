@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
             second: '2-digit'
         }).replace(',', '');
     }
-    
+    //
     function getNextDrawDate() {
         const referenceDrawDate = new Date('2025-07-12T17:00:00');
         const now = new Date();

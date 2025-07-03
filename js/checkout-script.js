@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
             pixButton.disabled = true;
             pixButton.querySelector('span').textContent = 'Gerando...';
 
-            fetch('http://127.0.0.1:5000/gerar-pix', {
+            fetch('https://backendfiote.onrender.com/gerar-pix', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify(paymentData)

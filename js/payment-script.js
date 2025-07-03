@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch(`http://127.0.0.1:5000/consultar-status?id=${transactionId}`);
+            const response = await fetch(`https://backendfiote.onrender.com/consultar-status?id=${transactionId}`);
             if (!response.ok) {
                 console.error("Falha ao consultar status (Servidor). Status:", response.status);
                 return;
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // <<< ALTERAÇÃO CRÍTICA AQUI >>>
                 // 2. Chama a rota para o servidor salvar a compra e gerar os números
-                fetch('http://127.0.0.1:5000/finalizar-compra', {
+                fetch('https://backendfiote.onrender.com/finalizar-compra', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ transactionId: transactionId })
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return null;
         }
         try {
-            const resp = await fetch(`http://127.0.0.1:5000/get-pix-data?id=${transactionId}`);
+            const resp = await fetch(`https://backendfiote.onrender.com/get-pix-data?id=${transactionId}`);
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             return await resp.json();
         } catch (err) {

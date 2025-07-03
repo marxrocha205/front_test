@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
             newPixButton.textContent = 'Gerando...';
 
             // 3. Chama a API para gerar um novo PIX (mesma lógica do checkout.js)
-            fetch('http://127.0.0.1:5000/gerar-pix', {
+            fetch('https://backendfiote.onrender.com/gerar-pix', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify(paymentData) // Usa os dados salvos

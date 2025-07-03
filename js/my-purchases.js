@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         searchBtn.querySelector('span').textContent = 'Buscando...';
 
         try {
-            const response = await fetch(`http://127.0.0.1:5000/consultar-compras?cpf=${cpf}`);
+            const response = await fetch(`https://backendfiote.onrender.com/consultar-compras?cpf=${cpf}`);
             
             if (!response.ok) {
                 throw new Error('Não foi possível se comunicar com o servidor.');
