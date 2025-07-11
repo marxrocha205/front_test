@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- Seleção de Elementos ---
+  // --- Seleção de Elementos ---
     const quantityInput = document.getElementById('quantity-input');
     const decreaseBtn = document.getElementById('decrease-btn');
     const increaseBtn = document.getElementById('increase-btn');
@@ -13,6 +13,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const summaryNumbers = document.getElementById('summary-numbers');
     const summaryOriginalPrice = document.getElementById('summary-original-price');
     const summaryFinalPrice = document.getElementById('summary-final-price');
+
+    // NOVO: Seleção dos elementos da barra flutuante
+    const quantityInputMobile = document.getElementById('quantity-input-mobile');
+    const decreaseBtnMobile = document.getElementById('decrease-btn-mobile');
+    const increaseBtnMobile = document.getElementById('increase-btn-mobile');
+    const paymentBtnMobile = document.getElementById('payment-btn-mobile');
+    const footerSummaryMobile = document.getElementById('footer-summary-mobile');
+    const summaryNumbersMobile = document.getElementById('summary-numbers-mobile');
+    const summaryOriginalPriceMobile = document.getElementById('summary-original-price-mobile');
+    const summaryFinalPriceMobile = document.getElementById('summary-final-price-mobile');
 
     let finalPriceForCheckout = 0;
 
@@ -52,22 +62,35 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isNaN(quantity) || quantity < 0) { quantity = 0; }
 
         if (quantity >= MINIMUM_QUANTITY) {
+            // Esconde avisos e mostra os rodapés
             quantityWarning.style.display = 'none';
             footerSummary.style.display = 'flex';
+            footerSummaryMobile.style.display = 'flex';
             footerNoSelection.style.display = 'none';
             paymentBtn.disabled = false;
+            paymentBtnMobile.disabled = false;
             
             const priceDetails = getPriceDetails(quantity);
             
-            summaryNumbers.textContent = `${quantity} Número${quantity !== 1 ? 's' : ''}`;
+            // Atualiza AMBOS os rodapés
+            const numbersText = `${quantity} Número${quantity !== 1 ? 's' : ''}`;
+            summaryNumbers.textContent = numbersText;
+            summaryNumbersMobile.textContent = numbersText;
             
             if (priceDetails.hasDiscount) {
-                summaryOriginalPrice.textContent = formatCurrency(priceDetails.originalPrice);
+                const originalPriceText = formatCurrency(priceDetails.originalPrice);
+                summaryOriginalPrice.textContent = originalPriceText;
+                summaryOriginalPriceMobile.textContent = originalPriceText;
                 summaryOriginalPrice.style.display = 'block';
+                summaryOriginalPriceMobile.style.display = 'block';
             } else {
                 summaryOriginalPrice.style.display = 'none';
+                summaryOriginalPriceMobile.style.display = 'none';
             }
-            summaryFinalPrice.textContent = formatCurrency(priceDetails.finalPrice);
+            const finalPriceText = formatCurrency(priceDetails.finalPrice);
+            summaryFinalPrice.textContent = finalPriceText;
+            summaryFinalPriceMobile.textContent = finalPriceText;
+
             finalPriceForCheckout = priceDetails.finalPrice;
         } else {
             quantityWarning.innerHTML = `<span>A quantidade mínima é ${MINIMUM_QUANTITY}</span>`;
@@ -92,7 +115,31 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSummaryAndButton();
     });
 
-    quantityInput.addEventListener('input', updateSummaryAndButton);
+    decreaseBtnMobile.addEventListener('click', () => {
+        let currentValue = parseInt(quantityInputMobile.value, 10);
+        if (currentValue > 1) {
+            quantityInputMobile.value = currentValue - 1;
+            quantityInput.value = quantityInputMobile.value; // Sincroniza
+            updateSummaryAndButton();
+        }
+    });
+
+    increaseBtnMobile.addEventListener('click', () => {
+        quantityInputMobile.value = parseInt(quantityInputMobile.value, 10) + 1;
+        quantityInput.value = quantityInputMobile.value; // Sincroniza
+        updateSummaryAndButton();
+    });
+
+    
+     quantityInput.addEventListener('input', () => {
+        quantityInputMobile.value = quantityInput.value;
+        updateSummaryAndButton();
+    });
+     
+    quantityInputMobile.addEventListener('input', () => {
+        quantityInput.value = quantityInputMobile.value;
+        updateSummaryAndButton();
+    });
 
     quantityInput.addEventListener('change', () => {
         if (parseInt(quantityInput.value, 10) < 1) {
@@ -100,7 +147,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateSummaryAndButton();
     });
-
+    const goToCheckout = () => {
+        sessionStorage.setItem('checkoutQuantity', quantityInput.value);
+        sessionStorage.setItem('checkoutPrice', finalPriceForCheckout);
+        window.location.href = 'checkout.html';
+    };
+    paymentBtn.addEventListener('click', goToCheckout);
+    paymentBtnMobile.addEventListener('click', goToCheckout);
     selectableItems.forEach(item => {
         item.addEventListener('click', () => {
             const currentQuantity = parseInt(quantityInput.value, 10) || 0;
