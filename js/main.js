@@ -26,30 +26,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let finalPriceForCheckout = 0;
 
-    // <<< CONSTANTES DE LÓGICA DE NEGÓCIO ATUALIZADAS >>>
+    // --- Constantes de Lógica de Negócio ---
     const PRICE_PER_NUMBER = 1.00;
-    const MINIMUM_QUANTITY = 1; 
-    // Novas faixas de desconto
+    const MINIMUM_QUANTITY = 1;
     const DISCOUNT_TIER_1_QTY = 10;
-    const DISCOUNT_TIER_1_PERCENT = 0.50; // 50%
+    const DISCOUNT_TIER_1_PERCENT = 0.50;
     const DISCOUNT_TIER_2_QTY = 30;
-    const DISCOUNT_TIER_2_PERCENT = 0.667; // 66%
+    const DISCOUNT_TIER_2_PERCENT = 0.66;
     const DISCOUNT_TIER_3_QTY = 100;
-    const DISCOUNT_TIER_3_PERCENT = 0.67; // 67%
+    const DISCOUNT_TIER_3_PERCENT = 0.67;
 
     // --- Funções Auxiliares ---
     function formatCurrency(value) {
         return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    // <<< FUNÇÃO DE PREÇO ATUALIZADA COM AS NOVAS FAIXAS >>>
     function getPriceDetails(quantity) {
         const originalPrice = quantity * PRICE_PER_NUMBER;
         let finalPrice = originalPrice;
         let hasDiscount = false;
         let discountPercentage = 0;
 
-        // Verifica do maior para o menor para garantir que o melhor desconto seja aplicado
         if (quantity >= DISCOUNT_TIER_3_QTY) {
             discountPercentage = DISCOUNT_TIER_3_PERCENT;
         } else if (quantity >= DISCOUNT_TIER_2_QTY) {
@@ -59,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (discountPercentage > 0) {
-            finalPrice = originalPrice * (1 - discountPercentage);
+            finalPrice = parseFloat((originalPrice * (1 - discountPercentage)).toFixed(2));
             hasDiscount = true;
         }
         return { finalPrice, originalPrice, hasDiscount };
@@ -70,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let quantity = parseInt(quantityInput.value, 10);
         if (isNaN(quantity) || quantity < 0) { quantity = 0; }
 
+        // Sincroniza os dois inputs de quantidade
         quantityInput.value = quantity;
         quantityInputMobile.value = quantity;
 
@@ -113,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Event Listeners (O resto do código não precisa de alteração) ---
+    // --- Event Listeners ---
     function goToCheckout() {
         sessionStorage.setItem('checkoutQuantity', quantityInput.value);
         sessionStorage.setItem('checkoutPrice', finalPriceForCheckout);
@@ -133,21 +131,36 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSummaryAndButton();
     });
 
+    // <<< CORREÇÃO AQUI >>>
     decreaseBtnMobile.addEventListener('click', () => {
         let currentValue = parseInt(quantityInputMobile.value, 10);
         if (currentValue > 1) {
             quantityInputMobile.value = currentValue - 1;
+            quantityInput.value = quantityInputMobile.value; // Sincroniza de volta para o principal
             updateSummaryAndButton();
         }
     });
 
+    // <<< CORREÇÃO AQUI >>>
     increaseBtnMobile.addEventListener('click', () => {
         quantityInputMobile.value = parseInt(quantityInputMobile.value, 10) + 1;
+        quantityInput.value = quantityInputMobile.value; // Sincroniza de volta para o principal
         updateSummaryAndButton();
     });
     
-    quantityInput.addEventListener('input', updateSummaryAndButton);
-    quantityInputMobile.addEventListener('input', updateSummaryAndButton);
+    // <<< CORREÇÃO AQUI >>>
+    quantityInput.addEventListener('input', () => {
+        // Sincroniza do principal para o mobile e atualiza
+        quantityInputMobile.value = quantityInput.value;
+        updateSummaryAndButton();
+    });
+    
+    // <<< CORREÇÃO AQUI >>>
+    quantityInputMobile.addEventListener('input', () => {
+        // Sincroniza do mobile para o principal e atualiza
+        quantityInput.value = quantityInputMobile.value;
+        updateSummaryAndButton();
+    });
 
     paymentBtn.addEventListener('click', goToCheckout);
     paymentBtnMobile.addEventListener('click', goToCheckout);
