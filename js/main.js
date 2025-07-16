@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  // --- Seleção de Elementos ---
+    // --- Seleção de Elementos ---
     const quantityInput = document.getElementById('quantity-input');
     const decreaseBtn = document.getElementById('decrease-btn');
     const increaseBtn = document.getElementById('increase-btn');
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const summaryOriginalPrice = document.getElementById('summary-original-price');
     const summaryFinalPrice = document.getElementById('summary-final-price');
 
-    // NOVO: Seleção dos elementos da barra flutuante
+    // Seleção dos elementos da barra flutuante
     const quantityInputMobile = document.getElementById('quantity-input-mobile');
     const decreaseBtnMobile = document.getElementById('decrease-btn-mobile');
     const increaseBtnMobile = document.getElementById('increase-btn-mobile');
@@ -26,29 +26,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let finalPriceForCheckout = 0;
 
-    // --- Constantes de Lógica de Negócio ---
+    // <<< CONSTANTES DE LÓGICA DE NEGÓCIO ATUALIZADAS >>>
     const PRICE_PER_NUMBER = 1.00;
-    const MINIMUM_QUANTITY = 3;
-    const DISCOUNT_TIER_1_QTY = 20;
-    const DISCOUNT_TIER_1_PERCENT = 0.50;
-    const DISCOUNT_TIER_2_QTY = 60;
-    const DISCOUNT_TIER_2_PERCENT = 0.67;
+    const MINIMUM_QUANTITY = 1; 
+    // Novas faixas de desconto
+    const DISCOUNT_TIER_1_QTY = 10;
+    const DISCOUNT_TIER_1_PERCENT = 0.50; // 50%
+    const DISCOUNT_TIER_2_QTY = 30;
+    const DISCOUNT_TIER_2_PERCENT = 0.667; // 66%
+    const DISCOUNT_TIER_3_QTY = 100;
+    const DISCOUNT_TIER_3_PERCENT = 0.67; // 67%
 
     // --- Funções Auxiliares ---
     function formatCurrency(value) {
         return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
+    // <<< FUNÇÃO DE PREÇO ATUALIZADA COM AS NOVAS FAIXAS >>>
     function getPriceDetails(quantity) {
         const originalPrice = quantity * PRICE_PER_NUMBER;
         let finalPrice = originalPrice;
         let hasDiscount = false;
         let discountPercentage = 0;
-        if (quantity >= DISCOUNT_TIER_2_QTY) {
+
+        // Verifica do maior para o menor para garantir que o melhor desconto seja aplicado
+        if (quantity >= DISCOUNT_TIER_3_QTY) {
+            discountPercentage = DISCOUNT_TIER_3_PERCENT;
+        } else if (quantity >= DISCOUNT_TIER_2_QTY) {
             discountPercentage = DISCOUNT_TIER_2_PERCENT;
         } else if (quantity >= DISCOUNT_TIER_1_QTY) {
             discountPercentage = DISCOUNT_TIER_1_PERCENT;
         }
+
         if (discountPercentage > 0) {
             finalPrice = originalPrice * (1 - discountPercentage);
             hasDiscount = true;
@@ -61,8 +70,10 @@ document.addEventListener('DOMContentLoaded', () => {
         let quantity = parseInt(quantityInput.value, 10);
         if (isNaN(quantity) || quantity < 0) { quantity = 0; }
 
+        quantityInput.value = quantity;
+        quantityInputMobile.value = quantity;
+
         if (quantity >= MINIMUM_QUANTITY) {
-            // Esconde avisos e mostra os rodapés
             quantityWarning.style.display = 'none';
             footerSummary.style.display = 'flex';
             footerSummaryMobile.style.display = 'flex';
@@ -72,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const priceDetails = getPriceDetails(quantity);
             
-            // Atualiza AMBOS os rodapés
             const numbersText = `${quantity} Número${quantity !== 1 ? 's' : ''}`;
             summaryNumbers.textContent = numbersText;
             summaryNumbersMobile.textContent = numbersText;
@@ -96,12 +106,20 @@ document.addEventListener('DOMContentLoaded', () => {
             quantityWarning.innerHTML = `<span>A quantidade mínima é ${MINIMUM_QUANTITY}</span>`;
             quantityWarning.style.display = 'block';
             footerSummary.style.display = 'none';
+            footerSummaryMobile.style.display = 'none';
             footerNoSelection.style.display = 'block';
             paymentBtn.disabled = true;
+            paymentBtnMobile.disabled = true;
         }
     }
 
-    // --- Event Listeners ---
+    // --- Event Listeners (O resto do código não precisa de alteração) ---
+    function goToCheckout() {
+        sessionStorage.setItem('checkoutQuantity', quantityInput.value);
+        sessionStorage.setItem('checkoutPrice', finalPriceForCheckout);
+        window.location.href = 'checkout.html';
+    };
+
     decreaseBtn.addEventListener('click', () => {
         let currentValue = parseInt(quantityInput.value, 10);
         if (currentValue > 1) {
@@ -119,41 +137,21 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentValue = parseInt(quantityInputMobile.value, 10);
         if (currentValue > 1) {
             quantityInputMobile.value = currentValue - 1;
-            quantityInput.value = quantityInputMobile.value; // Sincroniza
             updateSummaryAndButton();
         }
     });
 
     increaseBtnMobile.addEventListener('click', () => {
         quantityInputMobile.value = parseInt(quantityInputMobile.value, 10) + 1;
-        quantityInput.value = quantityInputMobile.value; // Sincroniza
         updateSummaryAndButton();
     });
-
     
-     quantityInput.addEventListener('input', () => {
-        quantityInputMobile.value = quantityInput.value;
-        updateSummaryAndButton();
-    });
-     
-    quantityInputMobile.addEventListener('input', () => {
-        quantityInput.value = quantityInputMobile.value;
-        updateSummaryAndButton();
-    });
+    quantityInput.addEventListener('input', updateSummaryAndButton);
+    quantityInputMobile.addEventListener('input', updateSummaryAndButton);
 
-    quantityInput.addEventListener('change', () => {
-        if (parseInt(quantityInput.value, 10) < 1) {
-            quantityInput.value = 1;
-        }
-        updateSummaryAndButton();
-    });
-    const goToCheckout = () => {
-        sessionStorage.setItem('checkoutQuantity', quantityInput.value);
-        sessionStorage.setItem('checkoutPrice', finalPriceForCheckout);
-        window.location.href = 'checkout.html';
-    };
     paymentBtn.addEventListener('click', goToCheckout);
     paymentBtnMobile.addEventListener('click', goToCheckout);
+
     selectableItems.forEach(item => {
         item.addEventListener('click', () => {
             const currentQuantity = parseInt(quantityInput.value, 10) || 0;
@@ -163,13 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    paymentBtn.addEventListener('click', () => {
-        // <<< ALTERAÇÃO AQUI >>>
-        sessionStorage.setItem('checkoutQuantity', quantityInput.value); // Salva a quantidade
-        sessionStorage.setItem('checkoutPrice', finalPriceForCheckout);
-        window.location.href = 'checkout.html';
-    });
-
     spinCards.forEach(card => {
         card.addEventListener('click', () => {
             const quantityElement = card.querySelector('.spin-card-details b');
@@ -177,11 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const quantityText = quantityElement.textContent.replace(/[^0-9]/g, '');
                 const quantity = parseInt(quantityText, 10);
                 if (!isNaN(quantity)) {
-                    const priceDetails = getPriceDetails(quantity);
-                    // <<< ALTERAÇÃO AQUI >>>
-                    sessionStorage.setItem('checkoutQuantity', quantity); // Salva a quantidade
-                    sessionStorage.setItem('checkoutPrice', priceDetails.finalPrice);
-                    window.location.href = 'checkout.html';
+                    goToCheckout(quantity, getPriceDetails(quantity).finalPrice);
                 }
             }
         });
@@ -210,7 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const nextDraw = getNextDrawDate();
         const formattedDate = formatDrawDate(nextDraw);
         drawDateElement.textContent = formattedDate;
-        console.log(`Próximo sorteio atualizado para: ${formattedDate}`);
     }
     
     // --- Inicialização ---

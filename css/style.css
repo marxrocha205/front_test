@@ -88,10 +88,18 @@ body {
     align-items: center;
     padding: 0.5rem 1rem;
     border-bottom: 2px solid var(--cor-borda);
+    font-weight: bold;
+
+    /* Aumenta o tamanho da fonte. Você pode mudar o valor 18px para maior ou menor. */
+    
+    
+    /* Opcional: Para deixar o texto centralizado e com um respiro */
+    
+   
 }
 .info-label, .info-value, .price-label, .price-tag {
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: 0.9rem;
+    font-weight: bold;
 }
 .price-info { display: flex; align-items: center; gap: 0.5rem; }
 .price-tag {
