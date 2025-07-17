@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const DISCOUNT_TIER_1_QTY = 10;
     const DISCOUNT_TIER_1_PERCENT = 0.50;
     const DISCOUNT_TIER_2_QTY = 30;
-    const DISCOUNT_TIER_2_PERCENT = 0.66;
+    const DISCOUNT_TIER_2_PERCENT = 0.667;
     const DISCOUNT_TIER_3_QTY = 100;
     const DISCOUNT_TIER_3_PERCENT = 0.67;
 
