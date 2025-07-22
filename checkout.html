@@ -121,5 +121,35 @@
     </footer>
 <script src="https://unpkg.com/imask"></script>
     <script src="js/checkout-script.js"></script>
+    <script>
+document.addEventListener("DOMContentLoaded", function () {
+    const emailInput = document.getElementById("email-input");
+    if (emailInput) {
+        // Remove espaços em tempo real
+        emailInput.addEventListener("input", function () {
+            this.value = this.value.replace(/\s+/g, "");
+        });
+    }
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const emailInput = document.getElementById("email-input");
+    if (emailInput) {
+        // Remove espaços em tempo real (já no exemplo acima)
+        emailInput.addEventListener("input", function () {
+            this.value = this.value.replace(/\s+/g, "");
+        });
+
+        // Opcional: bloquear espaço no teclado
+        emailInput.addEventListener("keydown", function (e) {
+            if (e.key === " " || e.code === "Space") {
+                e.preventDefault();
+            }
+        });
+    }
+});
+</script>
+
 </body>
 </html>
