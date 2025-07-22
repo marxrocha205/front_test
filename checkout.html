@@ -125,23 +125,11 @@
 document.addEventListener("DOMContentLoaded", function () {
     const emailInput = document.getElementById("email-input");
     if (emailInput) {
-        // Remove espaços em tempo real
+        // Remove espaços em tempo real (ao digitar ou colar)
         emailInput.addEventListener("input", function () {
             this.value = this.value.replace(/\s+/g, "");
         });
-    }
-});
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const emailInput = document.getElementById("email-input");
-    if (emailInput) {
-        // Remove espaços em tempo real (já no exemplo acima)
-        emailInput.addEventListener("input", function () {
-            this.value = this.value.replace(/\s+/g, "");
-        });
-
-        // Opcional: bloquear espaço no teclado
+        // Bloqueia a digitação da tecla espaço
         emailInput.addEventListener("keydown", function (e) {
             if (e.key === " " || e.code === "Space") {
                 e.preventDefault();
@@ -150,6 +138,5 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 </script>
-
 </body>
 </html>
