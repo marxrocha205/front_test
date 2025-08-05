@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const showQrBtn = document.getElementById('show-qr-btn');
     const qrCodeModal = document.getElementById('qr-code-modal');
     const closeModalBtn = document.getElementById('close-modal-btn');
-    const qrCodeImage = document.getElementById('qr-code-image');
+
     
     // --- LÓGICA DE DADOS ---
     const savedPrice = sessionStorage.getItem('paymentPrice');
@@ -145,23 +145,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
   if (showQrBtn) {
-        showQrBtn.addEventListener('click', async () => {
-            showQrBtn.disabled = true;
-            showQrBtn.textContent = 'Buscando...';
-            const pixData = await fetchPixData();
-            
-            console.log("Dados recebidos para o QR Code:", pixData);
+    showQrBtn.addEventListener('click', async () => {
+        showQrBtn.disabled = true;
+        showQrBtn.textContent = 'Buscando...';
+        const pixData = await fetchPixData();
 
-            if (pixData && pixData.qrCodeData && qrCodeImage && qrCodeModal) {
-                qrCodeImage.src = pixData.qrCodeData;
-                qrCodeModal.style.display = 'flex';
-            } else {
-                alert('QR Code não encontrado.');
-            }
-            showQrBtn.disabled = false;
-            showQrBtn.textContent = 'Ver QR Code';
-        });
-    }
+        console.log("Dados recebidos para o QR Code:", pixData);
+
+        if (pixData && pixData.qrCodeData) {
+            const qrCodeContainer = document.getElementById('qrcode-container');
+            const qrCodeModal = document.getElementById('qr-code-modal');
+
+            // Limpa qualquer QR Code que já estivesse ali para evitar duplicatas
+            qrCodeContainer.innerHTML = ''; 
+
+            // Cria a imagem do QR Code dentro da div
+            new QRCode(qrCodeContainer, {
+                text: pixData.qrCodeData,
+                width: 256,
+                height: 256,
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            // Mostra o modal
+            qrCodeModal.style.display = 'flex';
+        } else {
+            alert('QR Code não encontrado.');
+        }
+
+        showQrBtn.disabled = false;
+        showQrBtn.textContent = 'Ver QR Code';
+    });
+}
 
     if (closeModalBtn) {
         closeModalBtn.addEventListener('click', () => {
