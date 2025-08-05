@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 text: pixData.qrCodeData,
                 width: 256,
                 height: 256,
-                correctLevel: QRCode.CorrectLevel.H
+                correctLevel: QRCode.CorrectLevel.L
             });
 
             // Mostra o modal
