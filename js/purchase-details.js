@@ -58,14 +58,14 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="card">
                 <div class="card-header">
                     <h2>Informações da compra:</h2>
-                    <p>Edição 06 Fiote de Sorte R$ 1,00 - Porsche Macan | R$ 500.000 - ${drawDate}</p>
+                    <p>Edição Especial Fiote de Sorte R$ 1,00 - Hilux Srx 2025 + Corolla XRE 2025 | R$ 500.000 - 10/08/2025</p>
                     <span class="status-badge">Pagamento concluído</span>
                 </div>
                 <div class="card-body">
                     <div class="info-grid">
                         <div class="info-item"><span>Número do pedido:</span><strong>${purchase.order_id}</strong></div>
                         <div class="info-item"><span>Data e hora:</span><strong>${formatDateTime(purchase.purchase_date)}</strong></div>
-                        <div class="info-item"><span>Data e hora do sorteio:</span><strong>${drawDate}</strong></div>
+                        <div class="info-item"><span>Data e hora do sorteio:</span><strong>10/08/2025</strong></div>
                         <div class="info-item"><span>Valor total:</span><strong>${formatCurrency(purchase.amount)}</strong></div>
                         <div class="info-item"><span>Forma de pagamento:</span><strong>Pix</strong></div>
                         <div class="info-item"><span>Cliente:</span><strong>${purchase.client_name}</strong></div>
