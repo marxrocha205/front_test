@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function formatCurrency(value) { return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
     if (savedPrice && totalPriceElement) { const numericPrice = parseFloat(savedPrice); totalPriceElement.textContent = formatCurrency(numericPrice); } else if (totalPriceElement) { totalPriceElement.textContent = formatCurrency(0); }
 
-
     // --- APLICAÇÃO DAS MÁSCARAS DE INPUT ---
     const cpfInput = document.getElementById('cpf-input');
     const dobInput = document.getElementById('dob-input');
@@ -17,13 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dobInput) IMask(dobInput, { mask: '00/00/0000' });
     if (phoneInput) IMask(phoneInput, { mask: [ { mask: '(00) 0000-0000' }, { mask: '(00) 00000-0000' } ] });
 
-
     // --- VALIDAÇÃO, RECAPTCHA E LÓGICA DE API ---
     const nameInput = document.getElementById('name-input');
     const emailInput = document.getElementById('email-input');
     const pixButton = document.getElementById('pix-button');
     const requiredFields = [cpfInput, nameInput, emailInput, phoneInput, dobInput];
-    // ... (lógica do recaptcha não muda) ...
+    
     const recaptchaContainer = document.getElementById('recaptcha-simulation');
     const recaptchaIcon = document.getElementById('recaptcha-icon');
     const recaptchaText = document.getElementById('recaptcha-text');
@@ -63,15 +61,34 @@ document.addEventListener('DOMContentLoaded', () => {
         pixButton.addEventListener('click', () => {
             if (pixButton.disabled) return;
             
-            // <<< CORREÇÃO FINAL >>>
-            // Voltamos a enviar o amount e a quantity, como você intuiu.
+            // --- INÍCIO DA INTEGRAÇÃO UTMIFY ---
+            // 1. Captura os parâmetros da URL atual
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // 2. Cria um objeto com os dados de tracking
+            const trackingParameters = {
+                src: urlParams.get('src'),
+                sck: urlParams.get('sck'),
+                utm_source: urlParams.get('utm_source'),
+                utm_campaign: urlParams.get('utm_campaign'),
+                utm_medium: urlParams.get('utm_medium'),
+                utm_content: urlParams.get('utm_content'),
+                utm_term: urlParams.get('utm_term')
+            };
+            // --- FIM DA INTEGRAÇÃO UTMIFY ---
+
             const paymentData = {
-                amount: parseFloat(savedPrice),
-                quantity: parseInt(savedQuantity, 10) || 0,
+                // Dados do cliente
                 name: nameInput.value,
                 cpf: cpfInput.value,
                 email: emailInput.value,
-                phone: phoneInput.value
+                phone: phoneInput.value,
+                
+                // Dados da compra
+                quantity: parseInt(savedQuantity, 10) || 0,
+                
+                // Dados de tracking
+                tracking: trackingParameters // <-- ADICIONA O OBJETO AQUI
             };
             
             sessionStorage.setItem('paymentData', JSON.stringify(paymentData));
@@ -93,10 +110,11 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(data => {
                 if (data.success && data.transactionId) {
                     sessionStorage.setItem('transactionId', data.transactionId);
-                    sessionStorage.setItem('paymentPrice', paymentData.amount);
+                    // Salva o preço final retornado pelo backend, que é a fonte da verdade
+                    sessionStorage.setItem('paymentPrice', data.finalAmount);
                     window.location.href = 'payment.html';
                 } else {
-                    alert('Não foi possível iniciar o pagamento. Tente novamente.');
+                    alert(`Não foi possível iniciar o pagamento. Motivo: ${data.error}`);
                     pixButton.disabled = false;
                     pixButton.querySelector('span').textContent = 'Gerar Pix';
                 }
