@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="card-body">
                     <div class="info-grid">
-                        <div class="info-item"><span>Número do pedido:</span><str                        <div class="info-item"><span>Data e hora do sorteio:</span><strong>10/08/2025</strong></div>
+                        <div class="info-item"><span>Número do pedido:</span><str                        <div class="info-item"><span>Data e hora do sorteio:</span><strong>16/08/2025</strong></div>
                         <div class="info-item"><span>Valor total:</span><strong>${formatCurrency(purchase.amount)}</strong></div>
                         <div class="info-item"><span>Forma de pagamento:</span><strong>Pix</strong></div>
                         <div class="info-item"><span>Cliente:</span><strong>${purchase.client_name}</strong></div>
@@ -73,7 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="card-prizes">
                     <h3>Prêmios:</h3>
-                    <p>1º Prêmio: Porsche Macan</p>
+                    <p>1º Prêmio: Três Motos Honda CG 160 0km</p>
+                    <p>2º RAM 1.500 0km</p>
                 </div>
                 <div class="card-numbers">
                     <h3>Número(s) da sorte: ${purchase.quantity}</h3>
