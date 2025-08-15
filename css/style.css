@@ -230,6 +230,10 @@ body {
     border-radius: 8px;
     -moz-appearance: textfield; /* Firefox */
 }
+quantity-input-mobile{
+    font-size: 1.90rem;
+}
+
 #quantity-input::-webkit-outer-spin-button,
 #quantity-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -596,10 +600,10 @@ body {
     margin: 0;
 }
 .quantity-btn-mobile {
-    width: 28px; /* Menor */
-    height: 28px; /* Menor */
+    width: 60px; /* Menor */
+    height: 60px; /* Menor */
     border: 1px solid var(--cor-borda);
-    border-radius: 50%;
+    border-radius: 25%;
     background-color: #f3f4f6;
     font-size: 1.2rem; /* Fonte menor */
     font-weight: bold;
