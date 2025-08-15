@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
             validateForm(); 
         }, 2000);
     }
-
+ 
     function validateForm() {
         const allFieldsFilled = requiredFields.every(input => input && input.value.trim() !== '');
         if (allFieldsFilled && !captchaSolved && !captchaRunning) {
