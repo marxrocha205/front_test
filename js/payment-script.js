@@ -1,6 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
-
     console.log("payment-script.js carregado com sucesso!");
+
+    // --- VARIÁVEIS GLOBAIS ---
+    const transactionId = sessionStorage.getItem('transactionId');
+    let pixDataStore = null;
+    let countdownInterval;
+    let statusCheckInterval;
 
     // --- SELEÇÃO DOS ELEMENTOS ---
     const paymentAmountElement = document.getElementById('pix-payment-amount');
@@ -8,76 +13,118 @@ document.addEventListener('DOMContentLoaded', () => {
     const copyBtn = document.getElementById('copy-pix-btn');
     const copiedFeedback = document.getElementById('copied-feedback');
     const showQrBtn = document.getElementById('show-qr-btn');
-    const qrCodeModal = document.getElementById('qr-code-modal');
     const closeModalBtn = document.getElementById('close-modal-btn');
+    const qrCodeModal = document.getElementById('qr-code-modal');
 
-    
-    // --- LÓGICA DE DADOS ---
-    const savedPrice = sessionStorage.getItem('paymentPrice');
-    const transactionId = sessionStorage.getItem('transactionId');
+    // --- FUNÇÃO DE CÓPIA APRIMORADA PARA iOS ---
+    async function copyToClipboard(text) {
+        // Método 1: Tenta a API de Clipboard moderna, que é a melhor opção
+        try {
+            if (!navigator.clipboard) {
+                // Se a API não existe, força a ida para o método antigo
+                throw new Error('Clipboard API not available');
+            }
+            await navigator.clipboard.writeText(text);
+            console.log('Texto copiado com sucesso (API moderna)!');
+            return true;
+        } catch (err) {
+            console.warn('API moderna de clipboard falhou. Tentando método antigo (fallback)...', err);
+            
+            // Método 2: Fallback com execCommand, otimizado para iOS
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.setAttribute('readonly', ''); // Previne o teclado de aparecer no iOS
+                textArea.style.position = 'absolute';
+                textArea.style.left = '-9999px'; // Move para fora da tela
+                document.body.appendChild(textArea);
+                
+                // Lógica de seleção específica para iOS
+                if (navigator.userAgent.match(/ipad|ipod|iphone/i)) {
+                    textArea.contentEditable = true;
+                    textArea.readOnly = true;
+                    const range = document.createRange();
+                    range.selectNodeContents(textArea);
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                    textArea.setSelectionRange(0, 999999);
+                } else {
+                    textArea.select();
+                }
 
-    // --- VARIÁVEIS PARA CONTROLAR OS INTERVALOS ---
-    let countdownInterval;
-    let statusCheckInterval;
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                if (successful) {
+                    console.log('Texto copiado com sucesso (método antigo)!');
+                    return true;
+                } else {
+                    throw new Error('execCommand retornou "false"');
+                }
+            } catch (fallbackErr) {
+                console.error('Falha em ambos os métodos de cópia.', fallbackErr);
+                return false;
+            }
+        }
+    }
 
+    // --- LÓGICA PRINCIPAL (sem alterações) ---
     function formatCurrency(value) {
-        return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        return parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    if (savedPrice && paymentAmountElement) {
-        paymentAmountElement.textContent = formatCurrency(parseFloat(savedPrice));
-    }
-
-    // --- FUNÇÃO PARA VERIFICAR O STATUS DO PAGAMENTO ---
-    async function checkPaymentStatus() {
+    async function fetchPixData() {
         if (!transactionId) {
-            clearInterval(statusCheckInterval);
+            alert("ID da transação não encontrado. Você será redirecionado.");
+            window.location.href = 'index.html';
             return;
         }
+        try {
+            const resp = await fetch(`https://backendfiote.onrender.com/get-pix-data?id=${transactionId}`);
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            pixDataStore = await resp.json();
+            if (copyBtn) {
+                copyBtn.disabled = false;
+                copyBtn.textContent = 'Copiar Código Pix';
+            }
+            if (showQrBtn) {
+                showQrBtn.disabled = false;
+                showQrBtn.textContent = 'Ver QR Code';
+            }
+        } catch (err) {
+            console.error("Erro ao buscar PIX data:", err);
+            alert("Erro ao carregar dados do PIX. Tente recarregar a página.");
+            if (copyBtn) copyBtn.textContent = 'Erro ao carregar';
+            if (showQrBtn) showQrBtn.textContent = 'Erro ao carregar';
+        }
+    }
 
+    async function checkPaymentStatus() {
+        if (!transactionId) { clearInterval(statusCheckInterval); return; }
         try {
             const response = await fetch(`https://backendfiote.onrender.com/consultar-status?id=${transactionId}`);
-            if (!response.ok) {
-                console.error("Falha ao consultar status (Servidor). Status:", response.status);
-                return;
-            }
-
+            if (!response.ok) { console.error("Falha ao consultar status. Status:", response.status); return; }
             const data = await response.json();
             console.log(`Status atual da transação [${transactionId}]: ${data.status}`);
-
             const successStatuses = ['PAID', 'COMPLETED'];
             if (data && data.status && successStatuses.includes(data.status.toUpperCase())) {
-                
-                console.log("Pagamento confirmado! Finalizando a compra no servidor...");
-
-                // 1. Para todos os contadores
+                console.log("Pagamento confirmado! Finalizando a compra...");
                 clearInterval(countdownInterval);
                 clearInterval(statusCheckInterval);
-
-                // <<< ALTERAÇÃO CRÍTICA AQUI >>>
-                // 2. Chama a rota para o servidor salvar a compra e gerar os números
                 fetch('https://backendfiote.onrender.com/finalizar-compra', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ transactionId: transactionId })
                 })
-                .then(finalResponse => {
-                    if (!finalResponse.ok) {
-                        // Mesmo que dê erro aqui, o pagamento foi feito.
-                        // Avisamos o usuário e logamos o erro para análise manual.
-                        throw new Error('O pagamento foi aprovado, mas houve um erro ao registrar seus números. Por favor, contate o suporte com o ID da transação.');
-                    }
-                    return finalResponse.json();
-                })
+                .then(finalResponse => finalResponse.json())
                 .then(finalData => {
-                    console.log('Compra finalizada com sucesso no servidor:', finalData);
-                    // 3. APENAS se tudo deu certo, redireciona para a confirmação.
+                    if (!finalData.success) throw new Error(finalData.error || 'Erro desconhecido ao finalizar.');
                     window.location.href = 'confirmation.html';
                 })
                 .catch(error => {
                     console.error('Erro CRÍTICO ao finalizar compra:', error);
-                    alert(error.message);
-                    // Redireciona mesmo em caso de erro para não deixar o cliente travado.
+                    alert('Pagamento aprovado, mas houve um erro ao registrar seus números. Contate o suporte.');
                     window.location.href = 'confirmation.html';
                 });
             }
@@ -85,15 +132,26 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Erro de rede ao consultar status:", error);
         }
     }
-
-
-    // --- LÓGICA DO CRONÔMETRO ---
+    
+    // --- INICIALIZAÇÃO DA PÁGINA ---
+    const savedPrice = sessionStorage.getItem('paymentPrice');
+    if (savedPrice && paymentAmountElement) {
+        paymentAmountElement.textContent = formatCurrency(savedPrice);
+    }
+    if (copyBtn) { copyBtn.disabled = true; copyBtn.textContent = 'Carregando...'; }
+    if (showQrBtn) { showQrBtn.disabled = true; showQrBtn.textContent = 'Carregando...'; }
+    fetchPixData();
+    if (transactionId) {
+        setTimeout(() => {
+            checkPaymentStatus();
+            statusCheckInterval = setInterval(checkPaymentStatus, 5000);
+        }, 5000);
+    }
     let timeInSeconds = 299;
     countdownInterval = setInterval(() => {
         if (timeInSeconds <= 0) {
             clearInterval(countdownInterval);
             clearInterval(statusCheckInterval);
-
             if (timerElement) timerElement.textContent = 'Expirado';
             window.location.href = 'expired.html';
             return;
@@ -104,98 +162,44 @@ document.addEventListener('DOMContentLoaded', () => {
         timeInSeconds--;
     }, 1000);
 
-    // --- FUNÇÃO PARA BUSCAR DADOS DO PIX NO SERVIDOR ---
-    async function fetchPixData() {
-        if (!transactionId) {
-            clearInterval(countdownInterval);
-            clearInterval(statusCheckInterval);
-            alert("ID da transação não encontrado. Você será redirecionado ao início.");
-            window.location.href = 'index.html';
-            return null;
-        }
-        try {
-            const resp = await fetch(`https://backendfiote.onrender.com/get-pix-data?id=${transactionId}`);
-            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            return await resp.json();
-        } catch (err) {
-            console.error("Erro ao buscar PIX data:", err);
-            alert("Erro ao buscar dados do PIX.");
-            return null;
-        }
-    }
-
-    // --- LÓGICAS DOS BOTÕES ---
+    // --- EVENT LISTENERS ---
     if (copyBtn) {
-        copyBtn.addEventListener('click', async () => {
-            copyBtn.disabled = true;
-            copyBtn.textContent = 'Buscando...';
-            const pixData = await fetchPixData();
-            if (pixData && pixData.pixCode) {
-                navigator.clipboard.writeText(pixData.pixCode)
-                    .then(() => {
-                        if(copiedFeedback) copiedFeedback.style.display = 'flex';
-                        setTimeout(() => { if(copiedFeedback) copiedFeedback.style.display = 'none'; }, 3000);
-                    })
-                    .catch(() => alert('Falha ao copiar.'));
-            } else {
-                alert('Código Pix não disponível.');
+        copyBtn.addEventListener('click', async () => { // Adicionado async aqui
+            if (!pixDataStore || !pixDataStore.pixCode) {
+                alert('Código PIX ainda não carregado, aguarde.');
+                return;
             }
-            copyBtn.disabled = false;
-            copyBtn.textContent = 'Copiar Código Pix';
+            const success = await copyToClipboard(pixDataStore.pixCode); // Adicionado await
+            if (success) {
+                if (copiedFeedback) copiedFeedback.style.display = 'flex';
+                setTimeout(() => { if (copiedFeedback) copiedFeedback.style.display = 'none'; }, 2000);
+            } else {
+                alert('Falha ao copiar. Por favor, pressione e segure o código para copiar manualmente.');
+            }
         });
     }
-  if (showQrBtn) {
-    showQrBtn.addEventListener('click', async () => {
-        showQrBtn.disabled = true;
-        showQrBtn.textContent = 'Buscando...';
-        const pixData = await fetchPixData();
 
-        console.log("Dados recebidos para o QR Code:", pixData);
-
-        if (pixData && pixData.qrCodeData) {
+    if (showQrBtn) {
+        showQrBtn.addEventListener('click', () => {
+            if (!pixDataStore || !pixDataStore.qrCodeData) { alert('QR Code ainda não carregado, aguarde.'); return; }
             const qrCodeContainer = document.getElementById('qrcode-container');
-            const qrCodeModal = document.getElementById('qr-code-modal');
-
-            // Limpa qualquer QR Code que já estivesse ali para evitar duplicatas
-            qrCodeContainer.innerHTML = ''; 
-
-            // Cria a imagem do QR Code dentro da div
-            new QRCode(qrCodeContainer, {
-                text: pixData.qrCodeData,
-                width: 256,
-                height: 256,
-                correctLevel: QRCode.CorrectLevel.L
-            });
-
-            // Mostra o modal
-            qrCodeModal.style.display = 'flex';
-        } else {
-            alert('QR Code não encontrado.');
-        }
-
-        showQrBtn.disabled = false;
-        showQrBtn.textContent = 'Ver QR Code';
-    });
-}
+            if (qrCodeContainer && qrCodeModal) {
+                qrCodeContainer.innerHTML = '';
+                new QRCode(qrCodeContainer, {
+                    text: pixDataStore.qrCodeData,
+                    width: 256,
+                    height: 256,
+                    correctLevel: QRCode.CorrectLevel.L
+                });
+                qrCodeModal.style.display = 'flex';
+            }
+        });
+    }
 
     if (closeModalBtn) {
-        closeModalBtn.addEventListener('click', () => {
-            if(qrCodeModal) qrCodeModal.style.display = 'none';
-        });
+        closeModalBtn.addEventListener('click', () => { if(qrCodeModal) qrCodeModal.style.display = 'none'; });
     }
     if (qrCodeModal) {
-        qrCodeModal.addEventListener('click', (e) => {
-            if (e.target === qrCodeModal) {
-                qrCodeModal.style.display = 'none';
-            }
-        });
-    }
-    
-    // --- INICIA A VERIFICAÇÃO DE STATUS ---
-    if (transactionId) {
-        setTimeout(() => {
-            checkPaymentStatus();
-            statusCheckInterval = setInterval(checkPaymentStatus, 5000);
-        }, 5000);
+        qrCodeModal.addEventListener('click', (e) => { if (e.target === qrCodeModal) qrCodeModal.style.display = 'none'; });
     }
 });
