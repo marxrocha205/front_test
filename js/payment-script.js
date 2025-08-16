@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- VARIÁVEIS GLOBAIS ---
     const transactionId = sessionStorage.getItem('transactionId');
-    let pixDataStore = null; // Vamos armazenar todos os dados do PIX aqui
+    let pixDataStore = null;
     let countdownInterval;
     let statusCheckInterval;
 
@@ -16,39 +16,64 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeModalBtn = document.getElementById('close-modal-btn');
     const qrCodeModal = document.getElementById('qr-code-modal');
 
-    // --- FUNÇÃO DE CÓPIA UNIVERSAL (Funciona em todos os dispositivos) ---
-    function copyToClipboard(text) {
-        // Tenta usar a API moderna primeiro (requer HTTPS e contexto seguro)
-        if (navigator.clipboard && window.isSecureContext) {
-            return navigator.clipboard.writeText(text).then(() => true, () => false);
-        }
-        
-        // Se a API moderna falhar ou não estiver disponível, usa o método antigo
-        let textArea = document.createElement("textarea");
-        textArea.value = text;
-        textArea.style.position = "fixed"; // Evita que a tela pule
-        textArea.style.left = "-9999px";
-        textArea.style.top = "-9999px";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
+    // --- FUNÇÃO DE CÓPIA APRIMORADA PARA iOS ---
+    async function copyToClipboard(text) {
+        // Método 1: Tenta a API de Clipboard moderna, que é a melhor opção
         try {
-            const successful = document.execCommand('copy');
-            document.body.removeChild(textArea);
-            return Promise.resolve(successful);
+            if (!navigator.clipboard) {
+                // Se a API não existe, força a ida para o método antigo
+                throw new Error('Clipboard API not available');
+            }
+            await navigator.clipboard.writeText(text);
+            console.log('Texto copiado com sucesso (API moderna)!');
+            return true;
         } catch (err) {
-            console.error('Fallback de cópia falhou: ', err);
-            document.body.removeChild(textArea);
-            return Promise.resolve(false);
+            console.warn('API moderna de clipboard falhou. Tentando método antigo (fallback)...', err);
+            
+            // Método 2: Fallback com execCommand, otimizado para iOS
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.setAttribute('readonly', ''); // Previne o teclado de aparecer no iOS
+                textArea.style.position = 'absolute';
+                textArea.style.left = '-9999px'; // Move para fora da tela
+                document.body.appendChild(textArea);
+                
+                // Lógica de seleção específica para iOS
+                if (navigator.userAgent.match(/ipad|ipod|iphone/i)) {
+                    textArea.contentEditable = true;
+                    textArea.readOnly = true;
+                    const range = document.createRange();
+                    range.selectNodeContents(textArea);
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                    textArea.setSelectionRange(0, 999999);
+                } else {
+                    textArea.select();
+                }
+
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                if (successful) {
+                    console.log('Texto copiado com sucesso (método antigo)!');
+                    return true;
+                } else {
+                    throw new Error('execCommand retornou "false"');
+                }
+            } catch (fallbackErr) {
+                console.error('Falha em ambos os métodos de cópia.', fallbackErr);
+                return false;
+            }
         }
     }
 
-    // --- LÓGICA PRINCIPAL ---
+    // --- LÓGICA PRINCIPAL (sem alterações) ---
     function formatCurrency(value) {
         return parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    // Função para buscar os dados do PIX do backend
     async function fetchPixData() {
         if (!transactionId) {
             alert("ID da transação não encontrado. Você será redirecionado.");
@@ -58,10 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const resp = await fetch(`https://backendfiote.onrender.com/get-pix-data?id=${transactionId}`);
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            
-            pixDataStore = await resp.json(); // Armazena os dados na nossa variável global
-
-            // Habilita os botões agora que temos os dados
+            pixDataStore = await resp.json();
             if (copyBtn) {
                 copyBtn.disabled = false;
                 copyBtn.textContent = 'Copiar Código Pix';
@@ -70,7 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 showQrBtn.disabled = false;
                 showQrBtn.textContent = 'Ver QR Code';
             }
-
         } catch (err) {
             console.error("Erro ao buscar PIX data:", err);
             alert("Erro ao carregar dados do PIX. Tente recarregar a página.");
@@ -79,28 +100,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Função para checar o status do pagamento
     async function checkPaymentStatus() {
-        if (!transactionId) {
-            clearInterval(statusCheckInterval);
-            return;
-        }
+        if (!transactionId) { clearInterval(statusCheckInterval); return; }
         try {
             const response = await fetch(`https://backendfiote.onrender.com/consultar-status?id=${transactionId}`);
-            if (!response.ok) {
-                console.error("Falha ao consultar status (Servidor). Status:", response.status);
-                return;
-            }
+            if (!response.ok) { console.error("Falha ao consultar status. Status:", response.status); return; }
             const data = await response.json();
             console.log(`Status atual da transação [${transactionId}]: ${data.status}`);
-
-            const successStatuses = ['PAID', 'COMPLETED']; // Status de sucesso
+            const successStatuses = ['PAID', 'COMPLETED'];
             if (data && data.status && successStatuses.includes(data.status.toUpperCase())) {
-                console.log("Pagamento confirmado! Finalizando a compra no servidor...");
+                console.log("Pagamento confirmado! Finalizando a compra...");
                 clearInterval(countdownInterval);
                 clearInterval(statusCheckInterval);
-
-                // Chama a rota para o servidor salvar a compra
                 fetch('https://backendfiote.onrender.com/finalizar-compra', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -108,50 +119,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
                 .then(finalResponse => finalResponse.json())
                 .then(finalData => {
-                    if (!finalData.success) throw new Error(finalData.error || 'Erro desconhecido ao finalizar a compra.');
-                    console.log('Compra finalizada com sucesso no servidor:', finalData);
+                    if (!finalData.success) throw new Error(finalData.error || 'Erro desconhecido ao finalizar.');
                     window.location.href = 'confirmation.html';
                 })
                 .catch(error => {
                     console.error('Erro CRÍTICO ao finalizar compra:', error);
-                    alert('O pagamento foi aprovado, mas houve um erro ao registrar seus números. Por favor, contate o suporte com o ID da transação.');
-                    window.location.href = 'confirmation.html'; // Redireciona mesmo assim
+                    alert('Pagamento aprovado, mas houve um erro ao registrar seus números. Contate o suporte.');
+                    window.location.href = 'confirmation.html';
                 });
             }
         } catch (error) {
             console.error("Erro de rede ao consultar status:", error);
         }
     }
-
+    
     // --- INICIALIZAÇÃO DA PÁGINA ---
     const savedPrice = sessionStorage.getItem('paymentPrice');
     if (savedPrice && paymentAmountElement) {
         paymentAmountElement.textContent = formatCurrency(savedPrice);
     }
-    
-    // Desabilita os botões até os dados do PIX serem carregados
-    if (copyBtn) {
-        copyBtn.disabled = true;
-        copyBtn.textContent = 'Carregando...';
-    }
-    if (showQrBtn) {
-        showQrBtn.disabled = true;
-        showQrBtn.textContent = 'Carregando...';
-    }
-
-    // Busca os dados do PIX assim que a página carregar
+    if (copyBtn) { copyBtn.disabled = true; copyBtn.textContent = 'Carregando...'; }
+    if (showQrBtn) { showQrBtn.disabled = true; showQrBtn.textContent = 'Carregando...'; }
     fetchPixData();
-    
-    // Inicia a checagem de status após 5 segundos
     if (transactionId) {
         setTimeout(() => {
-            checkPaymentStatus(); // Roda uma vez
-            statusCheckInterval = setInterval(checkPaymentStatus, 5000); // E depois a cada 5 segundos
+            checkPaymentStatus();
+            statusCheckInterval = setInterval(checkPaymentStatus, 5000);
         }, 5000);
     }
-
-    // Lógica do cronômetro
-    let timeInSeconds = 299; // 5 minutos
+    let timeInSeconds = 299;
     countdownInterval = setInterval(() => {
         if (timeInSeconds <= 0) {
             clearInterval(countdownInterval);
@@ -166,30 +162,26 @@ document.addEventListener('DOMContentLoaded', () => {
         timeInSeconds--;
     }, 1000);
 
-    // --- EVENT LISTENERS DOS BOTÕES ---
+    // --- EVENT LISTENERS ---
     if (copyBtn) {
-        copyBtn.addEventListener('click', () => {
+        copyBtn.addEventListener('click', async () => { // Adicionado async aqui
             if (!pixDataStore || !pixDataStore.pixCode) {
-                alert('Código PIX ainda não carregado, aguarde um momento.');
+                alert('Código PIX ainda não carregado, aguarde.');
                 return;
             }
-            copyToClipboard(pixDataStore.pixCode).then(success => {
-                if (success) {
-                    if (copiedFeedback) copiedFeedback.style.display = 'flex';
-                    setTimeout(() => { if (copiedFeedback) copiedFeedback.style.display = 'none'; }, 2000);
-                } else {
-                    alert('Falha ao copiar. Seu navegador pode não ser compatível. Tente usar o QR Code.');
-                }
-            });
+            const success = await copyToClipboard(pixDataStore.pixCode); // Adicionado await
+            if (success) {
+                if (copiedFeedback) copiedFeedback.style.display = 'flex';
+                setTimeout(() => { if (copiedFeedback) copiedFeedback.style.display = 'none'; }, 2000);
+            } else {
+                alert('Falha ao copiar. Por favor, pressione e segure o código para copiar manualmente.');
+            }
         });
     }
 
     if (showQrBtn) {
         showQrBtn.addEventListener('click', () => {
-            if (!pixDataStore || !pixDataStore.qrCodeData) {
-                alert('QR Code ainda não carregado, aguarde um momento.');
-                return;
-            }
+            if (!pixDataStore || !pixDataStore.qrCodeData) { alert('QR Code ainda não carregado, aguarde.'); return; }
             const qrCodeContainer = document.getElementById('qrcode-container');
             if (qrCodeContainer && qrCodeModal) {
                 qrCodeContainer.innerHTML = '';
@@ -205,16 +197,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (closeModalBtn) {
-        closeModalBtn.addEventListener('click', () => {
-            if(qrCodeModal) qrCodeModal.style.display = 'none';
-        });
+        closeModalBtn.addEventListener('click', () => { if(qrCodeModal) qrCodeModal.style.display = 'none'; });
     }
-    
     if (qrCodeModal) {
-        qrCodeModal.addEventListener('click', (e) => {
-            if (e.target === qrCodeModal) {
-                qrCodeModal.style.display = 'none';
-            }
-        });
+        qrCodeModal.addEventListener('click', (e) => { if (e.target === qrCodeModal) qrCodeModal.style.display = 'none'; });
     }
 });
