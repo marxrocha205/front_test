@@ -15,7 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const showQrBtn = document.getElementById('show-qr-btn');
     const closeModalBtn = document.getElementById('close-modal-btn');
     const qrCodeModal = document.getElementById('qr-code-modal');
-
+     
+    // --- FUNÇÃO DE REDIRECIONAMENTO ---
+    function navigateWithUTMs(destinationUrl) {
+        const queryString = window.location.search;
+        window.location.href = destinationUrl + queryString;
+    }
     // --- FUNÇÃO DE CÓPIA APRIMORADA PARA iOS ---
     async function copyToClipboard(text) {
         // Método 1: Tenta a API de Clipboard moderna, que é a melhor opção
@@ -120,12 +125,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(finalResponse => finalResponse.json())
                 .then(finalData => {
                     if (!finalData.success) throw new Error(finalData.error || 'Erro desconhecido ao finalizar.');
-                    window.location.href = 'confirmation.html';
+                    navigateWithUTMs('confirmation.html');
                 })
                 .catch(error => {
                     console.error('Erro CRÍTICO ao finalizar compra:', error);
                     alert('Pagamento aprovado, mas houve um erro ao registrar seus números. Contate o suporte.');
-                    window.location.href = 'confirmation.html';
+                    navigateWithUTMs('confirmation.html');
                 });
             }
         } catch (error) {
@@ -153,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clearInterval(countdownInterval);
             clearInterval(statusCheckInterval);
             if (timerElement) timerElement.textContent = 'Expirado';
-            window.location.href = 'expired.html';
+            navigateWithUTMs('expired.html');
             return;
         }
         const minutes = Math.floor(timeInSeconds / 60);

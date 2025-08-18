@@ -10,7 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!paymentDataString) {
                 alert("Não foi possível encontrar os dados do pagamento original. Por favor, volte ao início.");
-                window.location.href = 'index.html'; // Redireciona para o início se não houver dados
+                //window.location.href = 'index.html'; // Redireciona para o início se não houver dados
+                navigateWithUTMs('index.html');
                 return;
             }
 
@@ -38,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     sessionStorage.setItem('transactionId', data.transactionId);
                     
                     // 5. Redireciona DE VOLTA para a tela de pagamento
-                    window.location.href = 'payment.html';
+                    navigateWithUTMs('payment.html');
                 } else {
                     alert('Não foi possível gerar um novo PIX. Tente novamente.');
                     newPixButton.disabled = false;

@@ -28,6 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let captchaRunning = false;
     let captchaSolved = false;
 
+    function navigateWithUTMs(destinationUrl) {
+        const queryString = window.location.search;
+        window.location.href = destinationUrl + queryString;
+    }
+
     function runRecaptchaSimulation() {
         captchaRunning = true;
         recaptchaContainer.style.display = 'flex';
@@ -112,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     sessionStorage.setItem('transactionId', data.transactionId);
                     // Salva o preço final retornado pelo backend, que é a fonte da verdade
                     sessionStorage.setItem('paymentPrice', data.finalAmount);
-                    window.location.href = 'payment.html';
+                    navigateWithUTMs('payment.html');
                 } else {
                     alert(`Não foi possível iniciar o pagamento. Motivo: ${data.error}`);
                     pixButton.disabled = false;
