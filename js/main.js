@@ -35,6 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const DISCOUNT_TIER_2_PERCENT = 0.667;
     const DISCOUNT_TIER_3_QTY = 100;
     const DISCOUNT_TIER_3_PERCENT = 0.67;
+    
+    function navigateWithUTMs(destinationUrl) {
+        const queryString = window.location.search; // Pega "?utm_source=..."
+        window.location.href = destinationUrl + queryString;
+    }
 
     // --- Funções Auxiliares ---
     function formatCurrency(value) {
@@ -115,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function goToCheckout() {
         sessionStorage.setItem('checkoutQuantity', quantityInput.value);
         sessionStorage.setItem('checkoutPrice', finalPriceForCheckout);
-        window.location.href = 'checkout.html';
+        navigateWithUTMs('checkout.html');
     };
 
     decreaseBtn.addEventListener('click', () => {
